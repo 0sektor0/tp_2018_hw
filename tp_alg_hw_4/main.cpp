@@ -2,23 +2,20 @@
 #include <string.h>
 #include <assert.h>
 #include <cmath>
-
 using namespace std;
 
 
 
-//minheap
-template <typename T>
+template <class T>
 class MinHeap
 {
  public:
-    MinHeap(const T* arr, int size);
+    MinHeap(const T* arr, const int& size);
+    void Add(const T&);
     void PrintHeap();
-    void Heapify();
-    void Add(T);
+    const T& Peek();
     int Size();
     T GetMin();
-    T Peek();
     ~MinHeap();
     MinHeap();
 
@@ -26,55 +23,53 @@ class MinHeap
  private:
     int GetChildIndex(int parent_index, bool left);
     int GetParentIndex(int child_index);
-    int SiftDown(int node_index);
-    int SiftUp(int node_index);
+    void SiftDown(int node_index);
+    void SiftUp(int node_index);
     void ExpandBuffer();
 
-    const int buffer_block_size = 100000;
+    const int buffer_block_size = 10;
     int buffer_size;
     int heap_size;
     T* buffer;
 };
 
 
-template <typename T>
-MinHeap<T>::MinHeap(const T* arr, int size) : heap_size(size), buffer_size(buffer_block_size)
+template <class T>
+MinHeap<T>::MinHeap(const T* arr, const int& size) : heap_size(size), buffer_size(buffer_block_size)
 {
     if (heap_size > buffer_size)
         buffer_size += heap_size;
 
     buffer = new T[buffer_size];
-    assert(buffer);
 
     memcpy(buffer, arr, heap_size * sizeof(T));
-    assert(buffer);
+
+    for(int i = heap_size/2 - 1; i >= 0; i--)
+        SiftDown(i);
 }
 
 
-template <typename T>
+template <class T>
 MinHeap<T>::MinHeap() : heap_size(0), buffer_size(buffer_block_size)
 {
     buffer = new T[buffer_block_size];
-    assert(buffer);
 }
 
 
-template <typename T>
+template <class T>
 MinHeap<T>::~MinHeap()
 {
     delete [] buffer;
 }
 
 
-template <typename T>
+template <class T>
 void MinHeap<T>::ExpandBuffer()
 {
     int new_buffer_size = buffer_size + buffer_block_size;
     T* new_buffer = new T[new_buffer_size];
-    assert(new_buffer);
 
     memcpy(new_buffer, buffer, heap_size * sizeof(T));
-    assert(new_buffer);
 
     delete [] buffer;
     buffer = new_buffer;
@@ -82,18 +77,17 @@ void MinHeap<T>::ExpandBuffer()
 }
 
 
-template <typename T>
+template <class T>
 int MinHeap<T>::Size()
 {
     return heap_size;
 }
 
 
-template <typename T>
+template <class T>
 int MinHeap<T>::GetParentIndex(int child_index)
 {
-    assert(child_index < heap_size);
-    assert(child_index >= 0);
+    assert(child_index < heap_size || child_index >= 0);
 
     if(child_index == 0)
         return child_index;
@@ -102,7 +96,7 @@ int MinHeap<T>::GetParentIndex(int child_index)
 }
 
 
-template <typename T>
+template <class T>
 int MinHeap<T>::GetChildIndex(int parent_index, bool left)
 {
     assert(parent_index >= 0);
@@ -120,59 +114,57 @@ int MinHeap<T>::GetChildIndex(int parent_index, bool left)
 }
 
 
-template <typename T>
-int MinHeap<T>::SiftUp(int node_index)
+template <class T>
+void MinHeap<T>::SiftUp(int node_index)
 {
-    //проверка на выход за пределы идет в методе получения родителя
-    int parent_index = GetParentIndex(node_index);
+    int parent_index = -1;
 
-    if(parent_index != node_index)
-        if(buffer[parent_index] > buffer[node_index])
+    while(node_index > 0)
+    {
+        //проверка на выход за пределы идет в методе получения родителя
+        parent_index = GetParentIndex(node_index);
+
+        if(parent_index != node_index)
         {
-            swap(buffer[parent_index], buffer[node_index]);
-            return parent_index;
+            if(buffer[parent_index] > buffer[node_index])
+            {
+                swap(buffer[parent_index], buffer[node_index]);
+                node_index = parent_index;
+            }
+            else
+                break;
         }
-
-    return node_index;
-}
-
-
-template <typename T>
-int MinHeap<T>::SiftDown(int node_index)
-{
-    //проверка на выход за пределы идет в методах получения потомков
-    int min_child = GetChildIndex(node_index, 1);
-    int max_child = GetChildIndex(node_index, 0);
-
-    //определение минимального потомка
-    if(buffer[min_child] > buffer[max_child])
-        min_child = max_child;
-
-    if(buffer[min_child] < buffer[node_index])
-    {
-        swap(buffer[min_child], buffer[node_index]);
-        return min_child;
-    }
-
-    return node_index;
-}
-
-
-template <typename T>
-void MinHeap<T>::Heapify()
-{
-    bool changed = true;
-
-    while(changed)
-    {
-        changed = false;
-        for(int i = heap_size-1; i >= 0; i--)
-            changed |= i != SiftUp(i);
+        else
+            break;
     }
 }
 
 
-template <typename T>
+template <class T>
+void MinHeap<T>::SiftDown(int node_index)
+{
+    while(true)
+    {
+        //проверка на выход за пределы идет в методах получения потомков
+        int min_child = GetChildIndex(node_index, 1);
+        int max_child = GetChildIndex(node_index, 0);
+
+        //определение минимального потомка
+        if(buffer[min_child] > buffer[max_child])
+            min_child = max_child;
+
+        if(buffer[min_child] < buffer[node_index])
+        {
+            swap(buffer[min_child], buffer[node_index]);
+            node_index = min_child;
+        }
+        else
+            break;
+    }
+}
+
+
+template <class T>
 void MinHeap<T>::PrintHeap()
 {
     int level_counter = 0;
@@ -194,8 +186,8 @@ void MinHeap<T>::PrintHeap()
 }
 
 
-template <typename T>
-void MinHeap<T>::Add(T value)
+template <class T>
+void MinHeap<T>::Add(const T& value)
 {
     if(heap_size == buffer_size)
         ExpandBuffer();
@@ -204,26 +196,19 @@ void MinHeap<T>::Add(T value)
     buffer[heap_size] = value;
     heap_size++;
 
-    bool sorting = true;
-    while(sorting)
-    {
-        int sorted_index = SiftUp(new_node_index);
-        sorting = false;
-        sorting = sorted_index != new_node_index;
-        new_node_index = sorted_index;
-    }
+    SiftUp(new_node_index);
 }
 
 
-template <typename T>
-T MinHeap<T>::Peek()
+template <class T>
+const T& MinHeap<T>::Peek()
 {
     assert(heap_size > 0);
     return buffer[0];
 }
 
 
-template <typename T>
+template <class T>
 T MinHeap<T>::GetMin()
 {
     assert(heap_size > 0);
@@ -234,23 +219,16 @@ T MinHeap<T>::GetMin()
 
     bool sorting = true;
     int index = 0;
-    while (sorting)
-    {
-        int sorted_index = SiftDown(index);
-        sorting = sorted_index != index;
-        index = sorted_index;
-    }
 
+    SiftDown(index);
     return min;
 }
 
 
 
-MinHeap<int>* ReadInput()
+void ReadInput(MinHeap<int>& heap)
 {
-    MinHeap<int>* heap = new MinHeap<int>();
-    int count;
-
+    int count = 0;
     cin >> count;
     assert(count > 0);
 
@@ -258,31 +236,28 @@ MinHeap<int>* ReadInput()
     {
         int data;
         cin >> data;
-        heap->Add(data);
+        heap.Add(data);
     }
-
-    return heap;
 }
 
 
-int CalcMinSum(MinHeap<int>* heap)
+int QuickSum(MinHeap<int>& heap)
 {
     int res = 0;
-    //heap->PrintHeap();
 
-    while(heap->Size()>1)
+    if (heap.Size()==1)
+        return heap.GetMin();
+
+    while(heap.Size()>1)
     {
-        int f_elem = heap->GetMin();
-        int s_elem = heap->GetMin();
+        int f_elem = heap.GetMin();
+        int s_elem = heap.GetMin();
 
         int sum = f_elem + s_elem;
         res += sum;
-        heap->Add(sum);
-
-        //heap->PrintHeap();
+        heap.Add(sum);
     }
 
-    //res += heap->GetMin();
     return res;
 }
 
@@ -290,16 +265,18 @@ int CalcMinSum(MinHeap<int>* heap)
 
 int main()
 {
-    MinHeap<int>* heap = ReadInput();
-    cout << CalcMinSum(heap);
+    /*int size = 10;
+    int* arr = new int[size] {4, 5, 6, 1, 0 ,2 ,4 ,5 ,6, 3};
+    MinHeap<int> heap_1 = MinHeap<int>(arr, size);
+    heap_1.PrintHeap();*/
 
-    delete heap;
+    MinHeap<int> heap = MinHeap<int>();
+
+    ReadInput(heap);
+    cout << QuickSum(heap);
+
     return 0;
 }
-
-
-
-
 
 
 

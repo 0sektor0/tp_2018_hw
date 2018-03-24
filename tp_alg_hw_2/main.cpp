@@ -28,16 +28,25 @@ void ReadData(int** array_a_ptr, int** array_b_ptr, int& size_a, int& size_b)
 }
 
 
-int FindIndex(int* array, int array_size, int key, int key_index)
+int FindIndex(const int* array, const int& array_size, const int& key)
 {
-    int start = key_index % array_size;
-    int middle = -1;
-    int end = array_size-1;
+    int start = 0;
+    int middle;
+    int end = 2;
 
-    if(array[start]>key)
+    while (true)
     {
-        end = start;
-        start = 0;
+        if(end >= array_size)
+        {
+            end = array_size-1;
+            break;
+        }
+
+        if(array[start] >= key || array[end] >= key)
+            break;
+
+        start = end;
+        end *= 2;
     }
 
     while(start <= end)
@@ -70,13 +79,6 @@ int FindIndex(int* array, int array_size, int key, int key_index)
 }
 
 
-void ShowIndexes(int* sorted_array, int sorted_array_size, int* key_array, int key_array_size)
-{
-    for(int i = 0; i < key_array_size; i++)
-        cout << FindIndex(sorted_array, sorted_array_size, key_array[i], i) << " ";
-}
-
-
 int main()
 {
     int* key_array = NULL;
@@ -85,13 +87,33 @@ int main()
     int sorted_array_size = 0;
 
     ReadData(&sorted_array, &key_array, sorted_array_size, key_array_size);
-    ShowIndexes(sorted_array, sorted_array_size, key_array, key_array_size);
+
+    for(int i = 0; i < key_array_size; i++)
+        cout << FindIndex(sorted_array, sorted_array_size, key_array[i]) << " ";
 
     delete [] key_array;
     delete [] sorted_array;
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
